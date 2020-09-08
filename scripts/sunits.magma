@@ -1,0 +1,24 @@
+/* To be launched as: magma -b nf:=<tag>  */
+load "../src/magma_number_field.m";
+SetClassGroupBounds("GRH");
+
+_DATA_FOLDER := "../data/" cat nf cat "/";
+
+K  := nf_set_tag(nf);
+
+for typ in ["tw", "opt", "phs"] do
+    printf "%o: Sunits for typ_fb='%o'...", nf, typ;
+    fb := Sprintf(_DATA_FOLDER cat "%o_%o.fb", nf, typ);
+    out:= Sprintf(_DATA_FOLDER cat "%o_%o.su", nf, typ);
+    
+    FB := fb_in_stream(fb, K);
+    t  := Cputime();
+    S  := get_S_units(K, FB);
+    t  := Cputime(t);
+    printf "\t[done] t=%o hk=%o\n", t, ClassNumber(K); 
+    printf "--> output in '%o'\n", out;
+    sunits_out_stream(out, K, nf, S);
+end for;
+
+exit;
+

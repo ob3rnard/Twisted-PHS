@@ -1,0 +1,113 @@
+"Twisted-PHS: Using the Product Formula to Solve Approx-SVP in Ideal Lattices"
+-------------------------------------------------------------------------------------------------
+
+1. Library requirements
+-------------------------------------------------------------------------------------------------
+Magma    v2.24-10  (http://magma.maths.usyd.edu.au/magma/)
+SageMath v9.0      (https://www.sagemath.org/)
+fplll    v5.3.2    (https://github.com/fplll/fplll)
+
+The codes and scripts are not guaranteed to work for other (older) versions.
+/!\ *** In particular, SageMath v9.0 uses Python 3.7.3 ***
+    *** Our code won't work with Python 2.x ***
+
+[NB1]   We suppose that fplll is in "/usr/local/bin/".
+        For changing this, you must edit in "./src/lattice.py" the following line:
+                 __FPLLL_PATH = "/usr/local/bin/";
+[NB2]   SageMath is significantly faster than Magma for computing class groups,
+        but behaves surprisingly poorly when it comes to computing S-units.
+
+
+2. How to run
+-------------------------------------------------------------------------------------------------
+To run a (simple) example in QQ(zeta_23), execute:
+             ./example/run_complete.sh z23 100 20
+This will run the entire computations using N=20 ideal targets of prime norm around bsz=100 bits.
+
+[NB]    To run bigger examples on several fields, augment target sizes bsz or number N, we advise to use the
+        '*.sh' counter part of the *.sage/*.magma/*.gpl scripts described in §3, eg. for computing
+        logSunit lattices for cyclotomic fields of cond. 23/29/31/37/41/43/47 (executing from
+        'scripts' and provided the previous steps have been performed):
+                 ./lat_logsunit.sh z23 z29 z31 z37 z41 z43 z47
+[NB]    This will detach one thread per field and log in '../logs'.
+
+
+3. Computational Roadmap
+-------------------------------------------------------------------------------------------------
+Computations chain for:
+    field <nf> (see 4.b for the used number field labelling).
+    challenge prime norm bit size <bsz>
+    number of challenges <N>
+
+
+a. Setting
+           mkdir -p ./data/<nf>                # The folder must exist. All outputs are here !
+           mkdir -p ./logs
+           cd ./scripts                        # Scripts must be executed from ./scripts
+
+b. Get infinite places and the factor base for each method
+           ./nf_get_places.sage <nf>           # -> output <nf>.inf, <nf>_(phs|opt|tw).fb [4 files]
+           ./nf_get_chals.sage  <nf> <bsz> <N> # -> output <nf>.chal_<bsz>_<N>
+                                               #    containing <N> chals of size <bsz>
+c. Compute S-units, ClDL solutions
+           magma -b nf:=<nf> sunits.magma      # -> output <nf>_(phs|opt|tw).su
+           ./cldl.sh <bsz> <N>  <nf>           # -> output <nf>_(phs|opt|tw).cldl_b<bsz>_n<N>
+
+d. Compute lattices and reduce
+           ./lat_logsunit.sage  <nf>           # -> output <nf>_(tw|opt0|phs0|opt|phs).lat
+           ./lat_reduce.sage    <nf>           # -> output <nf>_(tw|opt0|phs0|opt|phs).bkz
+
+e. Evaluation scripts
+           ./eval_geo.sage      <nf>           # -> output <nf>.geo and <nf>.geo.tab (TeX version)
+           ./eval_gs_norms.sage <nf>           # -> output <nf>_(tw|opt0|phs0|opt|phs).gsn
+           ./plot_gs_norms.sh   <nf>           # -> output <nf>_gsn_(expl_gh|expl_wo|appendix).png
+
+f. Solve Approx-idSVP (Takes some time)
+           ./solve_idsvp.sage   <nf> <bsz> <N> # -> output <nf>.sol_b<bsz>_n<N>
+
+0. Bonus
+[** Without any support, we also publish the script that plots the approximation factor graph.
+ ** Note that the script works only if all above computations have been done for:
+ **        All cyclotomics of conductor [23,29,31,37,41,43,47,53]
+ **        All NTRU Prime fields of deg [23,29,31,37]
+ **
+ **        ./plot_approx_fact_preproc.sage     # -> output ../data/(cyclo|ntru).(solrat|solmoy)
+ **        ./plot_approx_fact.gpl              # -> output ../data/(cyclo|ntru)_approx.png
+ **]
+
+
+
+4. Organization details
+-------------------------------------------------------------------------------------------------
+a. Folders
+  ./src      contains Python modules for twphs_algo / number_field / lattice / floating point routines.
+  ./scripts  contains the computation scripts.
+  ./data     contains the data produced by ./scripts/*, organized as one folder per field
+
+b. Labelling
+  Fields: we use tags <nf> of the form:
+      z<conductor> for cyclotomic fields, eg. 'z23' is QQ(zeta_23)
+      n<deg>       for NTRU Prime fields, eg. 'n23' is the field QQ[x]/<x^23-x-1>
+  Methods: we use predefined <typ>
+      'phs'/'opt'/'tw' for resp. -/Opt-/Tw- PHS variants
+      'phs0'/'opt0'    for PHS and Opt-PHS, but using the 'tw' factor base
+
+c. Extensions
+  For each field <nf>, files use always the same extension patterns.
+      # Places (inf, fb)
+      <nf>.inf                        Infinite places
+      <nf>_<typ>.fb                   Factor Base for each <typ>
+      # Log S-unit lattices
+      <nf>_<typ>.su                   S-Units for Factor Base <typ>
+      <nf>_<typ>.lat                  Log S-unit lattice with description <typ> and FB <typ>
+      <nf>_<typ>.bkz                  Reduced version of the above (<300 loops of BKZ-40).
+      # Challenges, clDL, and idSVP
+      <nf>.chal_b<sz>_n<nb>           Challenges (indpdnt of <typ>), norm bit size <sz>, <nb> elements
+      <nf>_<typ>.cldl_b<sz>_n<nb>     ClDL for above challenge, using Factor Base <typ>
+      <nf>.sol_<bsz>_n<nb>            IdSVP "short" elements for the above challenges (for all <typ>)
+      # Evaluations
+      <nf>.geo / <nf>.geo.tab         Geometric data (in human and tex form)
+      <nf>_<typ>.gsn                  Gram-Schmidt log norms (before/after BKZ) for log-sunit lat. <typ>
+      # Graphs
+      <nf>_*.png                      expl_gh, expl_wo and appendix
+

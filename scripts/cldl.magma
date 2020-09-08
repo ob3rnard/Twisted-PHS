@@ -1,0 +1,41 @@
+/* To be launched as: magma -b nf:=<tag> chal:=<file> typ:=<phs|opt|tw> */
+load "../src/magma_number_field.m";
+SetClassGroupBounds("GRH");
+
+_DATA_FOLDER := "../data/" cat nf cat "/";
+
+/* K, find FB and chals */
+K := nf_set_tag(nf);
+fb_file := Sprintf(_DATA_FOLDER cat "%o_%o.fb", nf, typ);
+FB := fb_in_stream(fb_file, K);
+cc, bsz := chal_in_stream(chal, K);
+out_file:= Sprintf(_DATA_FOLDER cat "%o_%o.cldl_b%o_n%o", nf, typ, bsz, #cc);
+
+printf "%o: clDL for typ=%o,in=%o\n", nf, typ, chal;
+out := Open(out_file, "w");
+
+/* ---- Header */
+nf_str := __nf_out_stream(K, nf);
+fprintf out, nf_str cat "\n";
+fprintf out, "# cldl(%o): typ=%o bsz=%o k=%o\n", chal, typ, bsz, #cc;
+
+
+/* Solve and store each challenge at a time and precise monitoring */
+for k in [1..#cc] do
+    _cc := cc[k];
+    printf "Challenge #%o...", k;
+    t   := Cputime();
+    eta := get_id_clDL(K, _cc, FB: S_fb:=[], scramble:=false); // Scramble is fun but render the thing intractable at high degrees.
+    t   := Cputime(t);
+    printf "\t[done] t=%o\n", t;
+    eta_str:= __cldl_out_stream(K, eta);
+    fprintf out, eta_str cat "\n";
+    Flush(out);
+end for;
+
+/* The end */
+fprintf out, "# --- END ---\n";
+delete out;
+
+exit;
+

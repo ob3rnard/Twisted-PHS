@@ -1,0 +1,55 @@
+#!/usr/bin/gnuplot -c
+
+if (ARGC != 0) {
+       print "Usage: ", ARG0, " <type:z23|k47>"
+       exit status 1;
+}
+
+
+data_dir = "../data/"
+
+
+# Set the plot grid for all graphs
+set border 3
+set tics out nomirror
+set grid
+
+set terminal pngcairo size 1000,500
+set ylabel "ln (\|\|g\|\|_2 / \lambda_1)"
+set yrange [0.1:1E13]
+set logscale y
+set xlabel "Field degree"
+
+set key box lt -1 lw 0.5 width 1.5 left
+set key reverse invert Left
+
+# ------------------------------------------------------- Cyclo
+
+cfiles = "z23 z29 z31 z37 z41 z43 z47 z53"
+set xrange [20:54]
+cyclo = data_dir."cyclo.solrat"
+cmoy = data_dir."cyclo.solmoy"
+set output data_dir."cyclo_approx.png"
+plot cyclo using 1:4 title "PHS log"           lc 3, \
+     cmoy  using 1:4 title "PHS log (average)" with line dashtype 1 lc rgb 'royalblue', \
+     cyclo using 1:3 title "Opt-PHS"           lc rgb 'dark-violet', \
+     cmoy  using 1:3 title "Opt-PHS (average)" with line dashtype 1 lc rgb 'dark-pink', \
+     cyclo using 1:2 title "Tw-PHS"            lc rgb 'tan1', \
+     cmoy  using 1:2 title "Tw-PHS (average)"  with line dashtype 1 lc rgb 'red'
+
+
+cfiles = "n23 n29 n31 n37"# z41 z43 z47 z53"
+set xrange [20:40]
+ntru = data_dir."ntru.solrat"
+nmoy = data_dir."ntru.solmoy"
+set output data_dir."ntru_approx.png"
+plot ntru  using 1:4 title "PHS log"           lc 3, \
+     nmoy  using 1:4 title "PHS log (average)" with line dashtype 1 lc rgb 'royalblue', \
+     ntru  using 1:3 title "Opt-PHS"           lc rgb 'dark-violet', \
+     nmoy  using 1:3 title "Opt-PHS (average)" with line dashtype 1 lc rgb 'dark-pink', \
+     ntru  using 1:2 title "Tw-PHS"            lc rgb 'tan1', \
+     nmoy  using 1:2 title "Tw-PHS (average)"  with line dashtype 1 lc rgb 'red'
+
+
+
+exit status 0;
