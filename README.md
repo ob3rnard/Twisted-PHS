@@ -1,6 +1,6 @@
 # Twisted-PHS
 
-Code in support of ASIACRYPT 2020 paper, available on the IACR ePrint Archive [ePrint:2020/1081](https://eprint.iacr.org/2021/1081):
+Code in support of ASIACRYPT 2020 paper, available on the IACR ePrint Archive [ePrint:2020/1081](https://eprint.iacr.org/2020/1081):
 
 > **Twisted-PHS: Using the Product Formula to Solve Approx-SVP in Ideal Lattices**  
 > Olivier Bernard and Adeline Roux-Langlois
